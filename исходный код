@@ -1,0 +1,69 @@
+@ECHO OFF
+REM  QBFC Project Options Begin
+REM HasVersionInfo: Yes
+REM Companyname: PO
+REM Productname: чистильщик
+REM Filedescription: 
+REM Copyrights: 
+REM Trademarks: 
+REM Originalname: 
+REM Comments: 
+REM Productversion: 01.04.03.00
+REM Fileversion: 01.04.03.00
+REM Internalname: чистильщик
+REM ExeType: console
+REM Architecture: x64
+REM Appicon: ..\Downloads\корзина.ico
+REM AdministratorManifest: Yes
+REM  QBFC Project Options End
+@ECHO ON
+@echo off
+setlocal
+title SSD OPTIMIZER AND CLEANER
+
+echo [1/11] Stopping Update Services...
+net stop wuauserv /y >nul 2>&1
+net stop bits /y >nul 2>&1
+
+echo [2/11] Cleaning Windows Update Cache...
+rd /s /q "C:\Windows\SoftwareDistribution\Download" >nul 2>&1
+mkdir "C:\Windows\SoftwareDistribution\Download"
+
+echo [3/11] Cleaning Temp files...
+del /q /f /s "%TEMP%\*" >nul 2>&1
+for /d %%p in ("%TEMP%\*") do rd /s /q "%%p" >nul 2>&1
+del /q /f /s "C:\Windows\Temp\*" >nul 2>&1
+for /d %%p in ("C:\Windows\Temp\*") do rd /s /q "%%p" >nul 2>&1
+
+echo [4/11] Running Disk Cleanup...
+
+cleanmgr /sagerun:1
+
+echo [5/11] DISM: Component Cleanup...
+dism /online /cleanup-image /startcomponentcleanup /resetbase
+
+echo [6/11] DISM: Restore Health...
+dism /online /cleanup-image /restorehealth
+
+echo [7/11] SFC: Scan System...
+sfc /scannow
+
+echo [8/11] Winget: Updating all apps...
+winget upgrade --all --accept-package-agreements --accept-source-agreements --quiet
+
+echo [9/11] SSD Optimization and HHD Optimization ...
+defrag /E /O /U /V
+
+echo [10/11] Flushing DNS...
+ipconfig /flushdns
+
+echo [11/11] Scheduling Quick Disk Check...
+echo y | chkdsk C: /f
+
+echo.
+echo ==========================================================
+echo проверка закончена! 
+echo ждите перезагрузки системы.
+echo ==========================================================
+shutdown /r /t 60
+pause
